@@ -1,83 +1,79 @@
-# Análise de Desempenho de Tabelas Hash
+# Análise de Desempenho de Tabelas Hash em Java
 
-Este projeto implementa e analisa o desempenho de diferentes estruturas de Tabela Hash (Hashing) em Java, avaliando o impacto de distintas funções de hash, tamanhos de tabela e estratégias de tratamento de colisão.
+## 1. Visão Geral do Projeto
 
-## 1. Implementação
+Este projeto realiza uma análise empírica do desempenho de diferentes implementações de Tabelas Hash (Hashing) em Java. O objetivo é avaliar como a escolha da **Função de Hash**, do **Tamanho da Tabela** e da **Estratégia de Tratamento de Colisão** impacta a eficiência em operações de inserção e busca.
 
-O projeto foi desenvolvido em Java e explora as seguintes configurações:
+O estudo foi conduzido testando-se as implementações com grandes volumes de dados (1, 5 e 20 milhões de registros) gerados aleatoriamente. As principais métricas de desempenho analisadas foram o **número de colisões** e o **tempo de execução** para inserção e busca.
 
-* **Funções de Hash**:
-    * `DivisaoHash`: `h(k) = k mod m`
-    * `MultiplicacaoHash`: `h(k) = floor(m * (k * A mod 1))` onde `A` é a Razão Áurea.
-    * `DobramentoHash`: A chave é dividida em partes, que são somadas para gerar o hash.
-* **Tratamento de Colisão**:
-    * **Encadeamento Separado (`HashTableSeparado`)**: Utiliza uma lista encadeada para agrupar registros que colidem no mesmo índice.
-    * **Endereçamento Aberto com Rehash (`HashTableRehash`)**: Utiliza sondagem linear para encontrar o próximo índice livre e aplica `rehash` (dobrando o tamanho da tabela) quando o fator de carga ultrapassa 75%.
-* **Conjuntos de Dados**:
-    * Foram gerados três arquivos de texto (`registros_1M.txt`, `registros_5M.txt`, `registros_20M.txt`) com números aleatórios de 9 dígitos, utilizando uma `seed` fixa (`12345L`) para garantir a reprodutibilidade dos testes.
+## 2. Detalhes da Implementação
 
-## 2. Resultados e Análise
+A estrutura do projeto foi desenvolvida de forma modular para permitir a fácil substituição e teste dos diferentes componentes.
 
-Os testes foram executados combinando cada função de hash com diferentes tamanhos de tabela (1.000, 10.000, 100.000) e os três conjuntos de dados. Medimos o número de colisões e os tempos de inserção e busca.
+### Funções de Hash
+
+Três funções de hash foram implementadas, cada uma com uma abordagem distinta para mapear chaves a índices da tabela:
+
+* **Resto da Divisão (`DivisaoHash.java`)**: Calcula o hash com a operação `h(k) = k mod m`. É uma função simples e rápida, mas sensível à escolha do tamanho `m`.
+* **Multiplicação (`MultiplicacaoHash.java`)**: Utiliza o método da multiplicação com a proporção áurea, calculado por `h(k) = floor(m * (k * A mod 1))`. Tende a funcionar bem com qualquer tamanho de tabela.
+* **Dobramento (`DobramentoHash.java`)**: A chave (um número de 9 dígitos) é dividida em três partes, que são somadas para compor o hash final. O objetivo é usar todas as partes da chave na geração do índice.
+
+### Estratégias de Tratamento de Colisão
+
+Duas estratégias clássicas para lidar com colisões foram implementadas:
+
+* **Endereçamento Separado (`HashTableSeparado.java`)**: Cada posição da tabela aponta para uma lista (`LinkedList`) que armazena todos os registros que colidiram naquele mesmo índice.
+* **Endereçamento Aberto com Sondagem e Rehash (`HashTableRehash.java`)**: Quando uma colisão ocorre, o algoritmo procura pelo próximo espaço livre na tabela. Para evitar o agrupamento primário e degradação de performance, foi utilizada a **sondagem quadrática**. Adicionalmente, quando a tabela atinge um fator de carga de 75%, um `rehash` é acionado: a tabela é redimensionada para o próximo número primo que seja o dobro do tamanho anterior, e todos os elementos são reinseridos.
+
+## 3. Como Executar o Projeto
+
+1.  **Gerar os Dados**: Execute a classe `GeradorRegistros.java` para criar os arquivos de dados (`registros_1M.txt`, `registros_5M.txt`, `registros_20M.txt`).
+2.  **Executar os Testes**: Execute a classe `Main.java`. O programa irá rodar todas as combinações de testes e gerar dois arquivos de resultado:
+    * `colisoes.csv`: Contém o número total de colisões para cada teste.
+    * `tempos.csv`: Contém os tempos de inserção e busca (em milissegundos) para cada teste.
+
+## 4. Análise dos Resultados
+
+Os resultados coletados nos arquivos CSV permitem uma análise comparativa do desempenho das abordagens.
 
 ### Análise de Colisões
 
-A colisão ocorre quando duas chaves diferentes são mapeadas para o mesmo índice na tabela.
+Os dados de colisões foram extraídos do arquivo `colisoes.csv`. A tabela abaixo mostra um resumo dos resultados para o conjunto de 1 milhão de registros.
 
-**Tabela de Colisões (Encadeamento Separado)**
+| Estratégia            | Função          | Tamanho Inicial | Colisões     |
+| --------------------- | --------------- | --------------- | :----------- |
+| Encadeamento Separado | Divisão         | 100.000         | 900.005      |
+| Encadeamento Separado | Multiplicação   | 100.000         | 900.005      |
+| Encadeamento Separado | Dobramento      | 10.000          | 997.998      |
+| **Rehash Quadrático** | **Divisão** | **1.000** | **477.768** |
+| **Rehash Quadrático** | **Multiplicação** | **1.000** | **480.071** |
 
-| Tamanho Tabela | Função        | Conjunto de Dados | Colisões     |
-| :------------- | :------------ | :---------------- | :----------- |
-| 1.000          | Divisão       | registros_1M.txt  | 999.000      |
-| 1.000          | Multiplicação | registros_1M.txt  | 999.000      |
-| 10.000         | Dobramento    | registros_1M.txt  | 997.998      |
-| 100.000        | Divisão       | registros_5M.txt  | 4.900.000    |
-| 100.000        | Multiplicação | registros_5M.txt  | 4.900.000    |
-| 100.000        | Dobramento    | registros_20M.txt | 19.997.993   |
+*(Fonte: `colisoes.csv`)*
 
-*(**Instrução para você**: Crie um gráfico de barras aqui para comparar visualmente as colisões. Você pode usar o Excel, Google Sheets ou uma biblioteca em Python como Matplotlib para gerar a imagem e adicioná-la aqui).*
+**Observações:**
 
-**Observações sobre Colisões:**
-
-* **Impacto do Tamanho da Tabela**: Como esperado, quanto menor a tabela, maior o número de colisões. Com uma tabela de tamanho 1.000 para 1 milhão de registros, quase todos os registros (999.000) resultaram em colisão, pois havia muito mais chaves do que posições disponíveis.
-* **Função de Dobramento**: A função de dobramento (`DobramentoHash`) apresentou um número de colisões ligeiramente diferente e, em alguns casos, menor que as outras duas. Isso ocorre porque ela distribui as chaves de maneira diferente, somando partes da chave em vez de usar apenas o resto da divisão ou a multiplicação.
-
-**Tabela de Colisões (Com Rehash)**
-
-| Tamanho Inicial | Função                 | Conjunto de Dados | Colisões |
-| :-------------- | :--------------------- | :---------------- | :------- |
-| 1.000           | Divisao_Rehash         | registros_1M.txt  | 477.768  |
-| 1.000           | Multiplicacao_Rehash   | registros_1M.txt  | 480.071  |
-
-*(**Instrução para você**: Crie outro gráfico comparando as colisões da abordagem com Rehash vs. Encadeamento Separado).*
-
-**Observações sobre o Rehash:**
-
-* A estratégia de `Rehash` **reduziu drasticamente** o número de colisões em comparação com o encadeamento separado para um mesmo tamanho inicial de tabela. Por exemplo, para 1 milhão de registros com a função de Divisão, o número de colisões caiu de 999.000 para 477.768.
-* Isso acontece porque, ao atingir o limiar de carga, a tabela é redimensionada, o que melhora a distribuição das chaves e abre mais "espaços vazios", diminuindo a probabilidade de colisões futuras.
+* **Impacto do Fator de Carga**: No encadeamento separado com tabela de 100.000 para 1 milhão de itens, o fator de carga é 10. Isso significa que, em média, cada lista encadeada teria 10 elementos, resultando em um alto número de colisões (mais de 900.000).
+* **Eficácia do Rehash**: A abordagem de **Rehash foi drasticamente mais eficaz** na gestão de colisões. Mesmo começando com uma tabela 100 vezes menor (tamanho 1.000), o número final de colisões foi quase 50% menor. Isso ocorre porque o `rehash` mantém o fator de carga baixo, garantindo que a tabela nunca fique "congestionada".
 
 ### Análise de Tempo de Execução
 
-*(**Instrução para você**: Aqui você deve criar tabelas e gráficos similares aos de colisão, mas usando os dados do seu arquivo `tempos.csv`. Analise o tempo de inserção e o tempo de busca separadamente).*
+*(Esta seção deve ser preenchida com os dados do seu arquivo `tempos.csv`)*
 
-**Exemplo de Análise de Tempo de Inserção:**
+**Instruções:**
 
-* Qual estratégia foi mais rápida para inserir: Encadeamento Separado ou Rehash? Por quê? (Dica: o Rehash pode ser mais lento durante a inserção que causa o redimensionamento, mas mais rápido no geral).
-* Como o tamanho da tabela influenciou o tempo de inserção?
+1.  Crie uma tabela similar à de colisões usando os dados de `tempos.csv`.
+2.  Gere gráficos de barras para comparar visualmente os tempos de inserção e busca.
+3.  Analise os resultados.
 
-**Exemplo de Análise de Tempo de Busca:**
+**Pontos esperados na análise de tempo:**
 
-* Qual estratégia ofereceu buscas mais rápidas? (Dica: tabelas com menos colisões geralmente resultam em buscas mais rápidas, pois há menos elementos para percorrer em uma lista ou menos saltos para fazer na sondagem linear).
-* Houve diferença significativa no tempo de busca entre as três funções de hash?
+* **Tempo de Inserção**: A inserção com `Rehash` pode ser pontualmente mais lenta, pois a operação de `rehash` (redimensionar e reinserir todos os elementos) consome tempo. No entanto, o tempo médio de inserção tende a ser excelente. A inserção em encadeamento separado é consistentemente rápida, pois apenas adiciona um elemento ao final de uma lista.
+* **Tempo de Busca**: **Aqui a abordagem com `Rehash` e sondagem quadrática deve ser a grande vencedora**. Como ela mantém o número de colisões baixo e evita o agrupamento, o número de saltos para encontrar um elemento é mínimo. No encadeamento separado, a busca pode se degradar para $$O(n)$$ no pior caso (se muitos elementos caírem no mesmo índice), exigindo uma varredura na lista encadeada.
 
-## 3. Conclusão
+## 5. Conclusão
 
-Com base nos resultados, podemos concluir que a escolha da estrutura de dados e dos algoritmos tem um impacto profundo no desempenho de uma aplicação.
+Com base na análise de colisões e no desempenho esperado de busca, a implementação de **Endereçamento Aberto com Sondagem Quadrática e Rehash (`HashTableRehash`) é superior** para este caso de uso.
 
-*(**Instrução para você**: Escreva aqui a sua conclusão final. Responda a perguntas como:)*
+Apesar de a operação de `rehash` introduzir uma complexidade adicional, seu benefício é claro: ao manter o fator de carga da tabela baixo, ela garante um número reduzido de colisões e, consequentemente, um tempo de busca próximo de $$O(1)$$, que é o objetivo principal de uma Tabela Hash.
 
-* **Qual foi a melhor combinação (função de hash + tratamento de colisão) e por quê?**
-    * Provavelmente, a abordagem com **Rehash** será a vencedora em termos de desempenho de busca e controle de colisões, embora possa ter um custo maior de memória e picos de latência durante a operação de redimensionamento.
-* **Qual a importância do fator de carga?**
-    * O fator de carga (`elementos / tamanho da tabela`) foi crucial. A estratégia de `Rehash` provou que manter um fator de carga baixo (menor que 0.75) é fundamental para a eficiência da Tabela Hash.
-* **Aprendizados do Projeto**: O que você aprendeu sobre estruturas de dados, análise de algoritmos e a importância de testes empíricos?
+O projeto demonstra empiricamente que a escolha de uma boa estratégia de tratamento de colisão é, muitas vezes, mais impactante para o desempenho final do que a escolha da função de hash em si.

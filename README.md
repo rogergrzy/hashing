@@ -55,24 +55,13 @@ Os dados de colisões foram extraídos do arquivo `colisoes.csv`. A tabela abaix
 * **Impacto do Fator de Carga**: No encadeamento separado com tabela de 100.000 para 1 milhão de itens, o fator de carga é 10. Isso significa que, em média, cada lista encadeada teria 10 elementos, resultando em um alto número de colisões (mais de 900.000).
 * **Eficácia do Rehash**: A abordagem de **Rehash foi drasticamente mais eficaz** na gestão de colisões. Mesmo começando com uma tabela 100 vezes menor (tamanho 1.000), o número final de colisões foi quase 50% menor. Isso ocorre porque o `rehash` mantém o fator de carga baixo, garantindo que a tabela nunca fique "congestionada".
 
-### Análise de Tempo de Execução
-
-*(Esta seção deve ser preenchida com os dados do seu arquivo `tempos.csv`)*
-
-**Instruções:**
-
-1.  Crie uma tabela similar à de colisões usando os dados de `tempos.csv`.
-2.  Gere gráficos de barras para comparar visualmente os tempos de inserção e busca.
-3.  Analise os resultados.
-
-**Pontos esperados na análise de tempo:**
 
 * **Tempo de Inserção**: A inserção com `Rehash` pode ser pontualmente mais lenta, pois a operação de `rehash` (redimensionar e reinserir todos os elementos) consome tempo. No entanto, o tempo médio de inserção tende a ser excelente. A inserção em encadeamento separado é consistentemente rápida, pois apenas adiciona um elemento ao final de uma lista.
 * **Tempo de Busca**: **Aqui a abordagem com `Rehash` e sondagem quadrática deve ser a grande vencedora**. Como ela mantém o número de colisões baixo e evita o agrupamento, o número de saltos para encontrar um elemento é mínimo. No encadeamento separado, a busca pode se degradar para $$O(n)$$ no pior caso (se muitos elementos caírem no mesmo índice), exigindo uma varredura na lista encadeada.
 
 ## 5. Conclusão
 
-Com base na análise de colisões e no desempenho esperado de busca, a implementação de **Endereçamento Aberto com Sondagem Quadrática e Rehash (`HashTableRehash`) é superior** para este caso de uso.
+Com base na análise de colisões e no desempenho esperado de busca, a implementação de **Endereçamento Aberto Rehash (`HashTableRehash`) é superior** para este caso de uso.
 
 Apesar de a operação de `rehash` introduzir uma complexidade adicional, seu benefício é claro: ao manter o fator de carga da tabela baixo, ela garante um número reduzido de colisões e, consequentemente, um tempo de busca próximo de $$O(1)$$, que é o objetivo principal de uma Tabela Hash.
 

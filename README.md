@@ -23,7 +23,7 @@ Três funções de hash foram implementadas, cada uma com uma abordagem distinta
 Duas estratégias clássicas para lidar com colisões foram implementadas:
 
 * **Endereçamento Separado (`HashTableSeparado.java`)**: Cada posição da tabela aponta para uma lista (`LinkedList`) que armazena todos os registros que colidiram naquele mesmo índice.
-* **Endereçamento Aberto com Sondagem e Rehash (`HashTableRehash.java`)**: Quando uma colisão ocorre, o algoritmo procura pelo próximo espaço livre na tabela. Para evitar o agrupamento primário e degradação de performance, foi utilizada a **sondagem quadrática**. Adicionalmente, quando a tabela atinge um fator de carga de 75%, um `rehash` é acionado: a tabela é redimensionada para o próximo número primo que seja o dobro do tamanho anterior, e todos os elementos são reinseridos.
+* **Endereçamento Aberto com Rehash (`HashTableRehash.java`)**: Quando uma colisão ocorre, o algoritmo procura pelo próximo espaço livre na tabela. Para evitar o agrupamento primário e degradação de performance, foi utilizada a **sondagem quadrática**. Adicionalmente, quando a tabela atinge um fator de carga de 75%, um `rehash` é acionado: a tabela é redimensionada para o próximo número primo que seja o dobro do tamanho anterior, e todos os elementos são reinseridos.
 
 ## 3. Como Executar o Projeto
 
@@ -45,8 +45,8 @@ Os dados de colisões foram extraídos do arquivo `colisoes.csv`. A tabela abaix
 | Encadeamento Separado | Divisão         | 100.000         | 900.005      |
 | Encadeamento Separado | Multiplicação   | 100.000         | 900.005      |
 | Encadeamento Separado | Dobramento      | 10.000          | 997.998      |
-| **Rehash Quadrático** | **Divisão** | **1.000** | **477.768** |
-| **Rehash Quadrático** | **Multiplicação** | **1.000** | **480.071** |
+| **Rehash** | **Divisão** | **1.000** | **477.768** |
+| **Rehash** | **Multiplicação** | **1.000** | **480.071** |
 
 *(Fonte: `colisoes.csv`)*
 
@@ -57,7 +57,7 @@ Os dados de colisões foram extraídos do arquivo `colisoes.csv`. A tabela abaix
 
 
 * **Tempo de Inserção**: A inserção com `Rehash` pode ser pontualmente mais lenta, pois a operação de `rehash` (redimensionar e reinserir todos os elementos) consome tempo. No entanto, o tempo médio de inserção tende a ser excelente. A inserção em encadeamento separado é consistentemente rápida, pois apenas adiciona um elemento ao final de uma lista.
-* **Tempo de Busca**: **Aqui a abordagem com `Rehash` e sondagem quadrática deve ser a grande vencedora**. Como ela mantém o número de colisões baixo e evita o agrupamento, o número de saltos para encontrar um elemento é mínimo. No encadeamento separado, a busca pode se degradar para $$O(n)$$ no pior caso (se muitos elementos caírem no mesmo índice), exigindo uma varredura na lista encadeada.
+* **Tempo de Busca**: **Aqui a abordagem com `Rehash` deve ser a grande vencedora**. Como ela mantém o número de colisões baixo e evita o agrupamento, o número de saltos para encontrar um elemento é mínimo. No encadeamento separado, a busca pode se degradar para $$O(n)$$ no pior caso (se muitos elementos caírem no mesmo índice), exigindo uma varredura na lista encadeada.
 
 ## 5. Conclusão
 
